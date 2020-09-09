@@ -5,3 +5,4 @@ authors = ["Bernardo Meurer <bernardo@meurer.org>"]
 edition = "2018"
 
 [dependencies]
+memmap = "0.7.0"

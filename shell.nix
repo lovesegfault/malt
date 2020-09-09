@@ -7,5 +7,6 @@ in
       rustFull
       niv
       nixpkgs-fmt
+      cargo-edit
     ];
   }
