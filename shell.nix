@@ -9,6 +9,8 @@ in
       pkg-config
       openssl
 
+      jq
+
       niv
       nixpkgs-fmt
       cargo-edit

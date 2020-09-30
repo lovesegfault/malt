@@ -12,4 +12,8 @@ pub enum Error {
     GetRelease(#[source] reqwest::Error),
     #[error("Release '{0}' not found")]
     ReleaseNotFound(u64),
+    #[error("Failed to deserialize release")]
+    ReleaseDeserialization(#[source] reqwest::Error),
+    #[error("Unknown error during API request")]
+    UnknownAPIResponse(reqwest::StatusCode),
 }
