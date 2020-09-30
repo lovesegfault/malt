@@ -5,6 +5,10 @@ in
     name = "malt";
     buildInputs = with pkgs; [
       rustFull
+
+      pkg-config
+      openssl
+
       niv
       nixpkgs-fmt
       cargo-edit
