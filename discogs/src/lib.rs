@@ -17,7 +17,7 @@ pub struct Track {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Identifier {
     #[serde(rename = "type")]
-    pub id_type: String,
+    pub _type: String,
     pub value: String
 }
 
@@ -65,7 +65,7 @@ pub struct Label {
 pub struct Image {
     pub height: u64,
     #[serde(rename = "type")]
-    pub image_type: String,
+    pub _type: String,
     pub resource_url: String,
     pub uri: String,
     pub width: u64,
