@@ -1,7 +1,4 @@
-[package]
-name = "malt"
-version = "0.1.0"
-authors = ["Bernardo Meurer <bernardo@meurer.org>"]
-edition = "2018"
-
-[dependencies]
+[workspace]
+members = [
+    "malt"
+]
