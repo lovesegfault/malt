@@ -129,10 +129,10 @@ pub struct Release {
     pub title: String,
     pub tracklist: Vec<Track>,
     pub uri: Url,
+    pub videos: Vec<Video>,
     pub year: u64,
     #[serde(skip)]
     series: Vec<()>, // TODO: I don't know what format this should be
-    videos: Vec<Video>,
 }
 
 pub struct Discogs {
