@@ -107,7 +107,7 @@ pub struct Release {
     pub data_quality: String,
     pub date_added: DateTime<Utc>,
     pub date_changed: DateTime<Utc>,
-    pub estimated_weight: u64,
+    pub estimated_weight: Option<u64>,
     pub extraartists: Vec<Artist>,
     pub format_quantity: u64,
     pub formats: Vec<Format>,
