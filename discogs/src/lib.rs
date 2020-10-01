@@ -116,7 +116,7 @@ pub struct Release {
     pub identifiers: Vec<Identifier>,
     pub images: Vec<Image>,
     pub labels: Vec<Label>,
-    pub lowest_price: f64,
+    pub lowest_price: Option<f64>,
     pub master_id: u64,
     pub master_url: Url,
     pub notes: String,
