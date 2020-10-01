@@ -163,6 +163,8 @@ pub struct MasterRelease {
 
 pub struct Discogs {
     pub base_url: Url,
+    // FIXME: We need to rate limit this to 60 requests per minute
+    // c.f. https://www.discogs.com/developers#page:home,header:home-rate-limiting
     client: Client,
     /// Personal access token
     token: Option<String>,
