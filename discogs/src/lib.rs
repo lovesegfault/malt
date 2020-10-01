@@ -135,7 +135,30 @@ pub struct Release {
 
     // FIXME: I don't know what type this should be
     #[serde(skip)]
-    series: Vec<()>,
+    series: (),
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct MasterRelease {
+    pub artists: Vec<Artist>,
+    pub data_quality: String,
+    pub genres: Vec<String>,
+    pub id: u64,
+    pub images: Vec<Image>,
+    pub lowest_price: Option<f64>,
+    pub main_release: u64,
+    pub main_release_url: Url,
+    pub most_recent_release: u64,
+    pub most_recent_release_url: Url,
+    pub num_for_sale: u64,
+    pub resource_url: Url,
+    pub styles: Vec<String>,
+    pub title: String,
+    pub tracklist: Vec<Track>,
+    pub uri: Url,
+    pub versions_url: Url,
+    pub videos: Vec<Video>,
+    pub year: u64,
 }
 
 pub struct Discogs {
@@ -170,6 +193,16 @@ impl Discogs {
         match response.status() {
             StatusCode::OK => response.json::<Release>().await.map_err(Error::ReleaseDeserialization),
             StatusCode::NOT_FOUND => Err(Error::ReleaseNotFound(release_id)),
+            s => Err(Error::UnknownAPIResponse(s))
+        }
+    }
+
+    pub async fn get_master_release(&self, master_release_id: u64) -> Result<MasterRelease, Error> {
+        let request = self.create_request(&format!("masters/{}", master_release_id))?;
+        let response = self.client.execute(request).await.map_err(Error::GetMasterRelease)?;
+        match response.status() {
+            StatusCode::OK => response.json::<MasterRelease>().await.map_err(Error::MasterReleaseDeserialization),
+            StatusCode::NOT_FOUND => Err(Error::MasterReleaseNotFound(master_release_id)),
             s => Err(Error::UnknownAPIResponse(s))
         }
     }

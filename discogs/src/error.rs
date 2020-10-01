@@ -14,10 +14,17 @@ pub enum Error {
     #[error("Unknown error during API request")]
     UnknownAPIResponse(reqwest::StatusCode),
 
-    #[error("Failed to get Release")]
+    #[error("Failed to get release")]
     GetRelease(#[source] reqwest::Error),
     #[error("Release '{0}' not found")]
     ReleaseNotFound(u64),
     #[error("Failed to deserialize release")]
     ReleaseDeserialization(#[source] reqwest::Error),
+
+    #[error("Failed to get master release")]
+    GetMasterRelease(#[source] reqwest::Error),
+    #[error("Master release '{0}' not found")]
+    MasterReleaseNotFound(u64),
+    #[error("Failed to deserialize master release")]
+    MasterReleaseDeserialization(#[source] reqwest::Error),
 }
