@@ -127,16 +127,23 @@ pub struct Release {
 pub struct Discogs {
     pub base_url: Url,
     client: Client,
+    /// Personal access token
+    token: Option<String>,
 }
 
 impl Discogs {
-    pub fn new<S: Into<String>>(user_agent: S) -> Result<Self, Error> {
+    pub fn new<S: Into<String>>(user_agent: S, token: Option<String>) -> Result<Self, Error> {
         let base_url = Url::parse("https://api.discogs.com").map_err(Error::InvalidBaseUrl)?;
         let client = Client::builder()
             .user_agent(user_agent.into())
             .build()
             .map_err(Error::FaildToCreateClient)?;
-        Ok(Self { base_url, client })
+        Ok(Self { base_url, client, token })
+    }
+
+    fn create_request(&self, append: String) -> Result<reqwest::Request, Error> {
+
+        todo!()
     }
 
     pub async fn get_release(&self, release_id: u64) -> Result<Release, Error> {
