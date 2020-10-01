@@ -10,5 +10,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let master_release = client.get_master_release(38722).await.unwrap();
     dbg!(master_release);
+
     Ok(())
 }

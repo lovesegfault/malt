@@ -212,6 +212,12 @@ impl Discogs {
 
 #[cfg(test)]
 mod tests {
+    // A living list of interesting test subjects:
+    // releases
+    // 11873130
+    //
+    // master releases
+    // 38722
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
