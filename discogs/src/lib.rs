@@ -8,7 +8,8 @@ pub use error::Error;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Track {
-    pub duration: String, // TODO: parse this
+    // TODO: parse this
+    pub duration: String,
     pub position: String,
     pub title: String,
     pub type_: String,
@@ -131,8 +132,10 @@ pub struct Release {
     pub uri: Url,
     pub videos: Vec<Video>,
     pub year: u64,
+
+    // FIXME: I don't know what type this should be
     #[serde(skip)]
-    series: Vec<()>, // TODO: I don't know what format this should be
+    series: Vec<()>,
 }
 
 pub struct Discogs {
