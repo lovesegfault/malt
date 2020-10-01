@@ -10,21 +10,37 @@ pub enum Error {
     #[error("Failed to compose base URL")]
     CreateRequestUrl(#[source] url::ParseError),
     #[error("Failed to build GET request")]
-    BuildRequest(#[source] reqwest::Error),
-    #[error("Unknown error during API request")]
-    UnknownAPIResponse(reqwest::StatusCode),
+    BuildGETRequest(#[source] reqwest::Error),
+    #[error("Unknown response to GET request")]
+    UnknownGETResponse(reqwest::StatusCode),
 
-    #[error("Failed to get release")]
-    GetRelease(#[source] reqwest::Error),
-    #[error("Release '{0}' not found")]
-    ReleaseNotFound(u64),
-    #[error("Failed to deserialize release")]
-    ReleaseDeserialization(#[source] reqwest::Error),
+    #[error("Failed to get release '{id}'")]
+    GetRelease {
+        id: u64,
+        #[source]
+        source: reqwest::Error,
+    },
+    #[error("Release '{id}' not found")]
+    ReleaseNotFound { id: u64 },
+    #[error("Failed to deserialize release '{id}'")]
+    ReleaseDeserialization {
+        id: u64,
+        #[source]
+        source: reqwest::Error,
+    },
 
-    #[error("Failed to get master release")]
-    GetMasterRelease(#[source] reqwest::Error),
-    #[error("Master release '{0}' not found")]
-    MasterReleaseNotFound(u64),
-    #[error("Failed to deserialize master release")]
-    MasterReleaseDeserialization(#[source] reqwest::Error),
+    #[error("Failed to get master release '{id}'")]
+    GetMasterRelease {
+        id: u64,
+        #[source]
+        source: reqwest::Error,
+    },
+    #[error("Master release '{id}' not found")]
+    MasterReleaseNotFound { id: u64 },
+    #[error("Failed to deserialize master release '{id}'")]
+    MasterReleaseDeserialization {
+        id: u64,
+        #[source]
+        source: reqwest::Error,
+    },
 }

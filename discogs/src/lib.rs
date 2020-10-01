@@ -19,7 +19,7 @@ pub struct Track {
 pub struct Identifier {
     #[serde(rename = "type")]
     pub _type: String,
-    pub value: String
+    pub value: String,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -59,7 +59,7 @@ pub struct Label {
     pub entity_type_name: String,
     pub id: u64,
     pub name: String,
-    pub resource_url: Url
+    pub resource_url: Url,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -177,35 +177,57 @@ impl Discogs {
             .user_agent(user_agent.into())
             .build()
             .map_err(Error::FaildToCreateClient)?;
-        Ok(Self { base_url, client, token })
+        Ok(Self {
+            base_url,
+            client,
+            token,
+        })
     }
 
     fn create_request(&self, append: &str) -> Result<reqwest::Request, Error> {
-        let request_url = self.base_url.join(append).map_err(Error::CreateRequestUrl)?;
+        let request_url = self
+            .base_url
+            .join(append)
+            .map_err(Error::CreateRequestUrl)?;
         let mut request_builder = self.client.get(request_url);
         if let Some(token) = &self.token {
-            request_builder = request_builder.header("Authorization", format!("Discogs token={}", token));
+            request_builder =
+                request_builder.header("Authorization", format!("Discogs token={}", token));
         }
-        request_builder.build().map_err(Error::BuildRequest)
+        request_builder.build().map_err(Error::BuildGETRequest)
     }
 
-    pub async fn get_release(&self, release_id: u64) -> Result<Release, Error> {
-        let request = self.create_request(&format!("releases/{}", release_id))?;
-        let response = self.client.execute(request).await.map_err(Error::GetRelease)?;
+    pub async fn get_release(&self, id: u64) -> Result<Release, Error> {
+        let request = self.create_request(&format!("releases/{}", id))?;
+        let response = self
+            .client
+            .execute(request)
+            .await
+            .map_err(|e| Error::GetRelease { id, source: e })?;
         match response.status() {
-            StatusCode::OK => response.json::<Release>().await.map_err(Error::ReleaseDeserialization),
-            StatusCode::NOT_FOUND => Err(Error::ReleaseNotFound(release_id)),
-            s => Err(Error::UnknownAPIResponse(s))
+            StatusCode::OK => response
+                .json::<Release>()
+                .await
+                .map_err(|e| Error::ReleaseDeserialization { id, source: e }),
+            StatusCode::NOT_FOUND => Err(Error::ReleaseNotFound { id }),
+            s => Err(Error::UnknownGETResponse(s)),
         }
     }
 
-    pub async fn get_master_release(&self, master_release_id: u64) -> Result<MasterRelease, Error> {
-        let request = self.create_request(&format!("masters/{}", master_release_id))?;
-        let response = self.client.execute(request).await.map_err(Error::GetMasterRelease)?;
+    pub async fn get_master_release(&self, id: u64) -> Result<MasterRelease, Error> {
+        let request = self.create_request(&format!("masters/{}", id))?;
+        let response = self
+            .client
+            .execute(request)
+            .await
+            .map_err(|e| Error::GetMasterRelease { id, source: e })?;
         match response.status() {
-            StatusCode::OK => response.json::<MasterRelease>().await.map_err(Error::MasterReleaseDeserialization),
-            StatusCode::NOT_FOUND => Err(Error::MasterReleaseNotFound(master_release_id)),
-            s => Err(Error::UnknownAPIResponse(s))
+            StatusCode::OK => response
+                .json::<MasterRelease>()
+                .await
+                .map_err(|e| Error::MasterReleaseDeserialization { id, source: e }),
+            StatusCode::NOT_FOUND => Err(Error::MasterReleaseNotFound { id }),
+            s => Err(Error::UnknownGETResponse(s)),
         }
     }
 }
