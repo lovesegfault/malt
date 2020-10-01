@@ -142,12 +142,12 @@ impl Discogs {
     }
 
     fn create_request(&self, append: &str) -> Result<reqwest::Request, Error> {
-        let request_url = self.base_url.join(append).unwrap(); //FIXME
+        let request_url = self.base_url.join(append).map_err(Error::CreateRequestUrl)?;
         let mut request_builder = self.client.get(request_url);
         if let Some(token) = &self.token {
             request_builder = request_builder.header("Authorization", format!("Discogs token={}", token));
         }
-        Ok(request_builder.build().unwrap())
+        request_builder.build().map_err(Error::BuildRequest)
     }
 
     pub async fn get_release(&self, release_id: u64) -> Result<Release, Error> {
