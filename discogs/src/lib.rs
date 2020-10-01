@@ -67,10 +67,13 @@ pub struct Image {
     #[serde(rename = "type")]
     pub _type: String,
     pub resource_url: String,
-    pub uri: String,
     pub width: u64,
-    #[serde(skip)] // TODO: I don't know what format this should be
-    uri150: (),
+
+    // FIXME: These should be a Url, but if the user doesn't send a token, we receive an empty
+    // string, which isn't a valid Url and I don't want to figure out how to get it to serialize
+    // into Option<Url> right now
+    pub uri: String,
+    pub uri150: String,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -82,6 +85,15 @@ pub struct Artist {
     pub resource_url: Url,
     pub role: String,
     pub tracks: String,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Video {
+    uri: Url,
+    title: String,
+    description: String,
+    duration: u64,
+    embed: bool,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -120,8 +132,7 @@ pub struct Release {
     pub year: u64,
     #[serde(skip)]
     series: Vec<()>, // TODO: I don't know what format this should be
-    #[serde(skip)]
-    videos: (), // TODO: I am lazy
+    videos: Vec<Video>,
 }
 
 pub struct Discogs {
