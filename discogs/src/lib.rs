@@ -141,14 +141,18 @@ impl Discogs {
         Ok(Self { base_url, client, token })
     }
 
-    fn create_request(&self, append: String) -> Result<reqwest::Request, Error> {
-
-        todo!()
+    fn create_request(&self, append: &str) -> Result<reqwest::Request, Error> {
+        let request_url = self.base_url.join(append).unwrap(); //FIXME
+        let mut request_builder = self.client.get(request_url);
+        if let Some(token) = &self.token {
+            request_builder = request_builder.header("Authorization", format!("Discogs token={}", token));
+        }
+        Ok(request_builder.build().unwrap())
     }
 
     pub async fn get_release(&self, release_id: u64) -> Result<Release, Error> {
-        let request_url = self.base_url.join(&format!("releases/{}", release_id)).map_err(Error::UrlCompose)?;
-        let response = self.client.get(request_url).send().await.map_err(Error::GetRelease)?;
+        let request = self.create_request(&format!("releases/{}", release_id))?;
+        let response = self.client.execute(request).await.map_err(Error::GetRelease)?;
         match response.status() {
             StatusCode::OK => response.json::<Release>().await.map_err(Error::ReleaseDeserialization),
             StatusCode::NOT_FOUND => Err(Error::ReleaseNotFound(release_id)),
