@@ -1,18 +1,21 @@
 let
   pkgs = import ./nix;
 in
-  pkgs.mkShell {
-    name = "malt";
-    buildInputs = with pkgs; [
-      rustFull
+pkgs.mkShell {
+  name = "malt";
+  buildInputs = with pkgs; [
+    cargo
+    rust-analyzer
 
-      pkg-config
-      openssl
+    pkg-config
+    openssl
 
-      jq
+    jq
 
-      niv
-      nixpkgs-fmt
-      cargo-edit
-    ];
-  }
+    niv
+    nixpkgs-fmt
+    cargo-edit
+  ];
+
+  shellHook = "${(import ./.).preCommitChecks.shellHook}";
+}

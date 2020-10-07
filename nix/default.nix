@@ -2,24 +2,25 @@ let
   sources = import ./sources.nix;
   overlays = [
     (import sources.nixpkgs-mozilla)
-    (self: super:
+    (self: _:
       {
-        rustChannel = self.rustChannelOf { channel = "nightly"; };
+        rustChannel = self.rustChannelOf { channel = "stable"; };
         rustFull = self.rustChannel.rust.override {
           extensions = [
             "clippy-preview"
             "rust-analysis"
-            "rust-analyzer-preview"
             "rust-src"
             "rust-std"
             "rustfmt-preview"
           ];
         };
-        cargo = self.rustChannel.rust;
-        rustc = self.rustChannel.rust;
+        cargo = self.rustFull;
+        rustc = self.rustFull;
       }
     )
-    (self: super: { naersk = self.callPackage sources.naersk { }; })
+    (self: _: { gitignoreSource = (import sources.gitignore { inherit (self) lib; }).gitignoreSource; })
+    (_: _: { nixPreCommitHooks = import sources.nix-pre-commit-hooks; })
+    (self: _: { cargo2nix = lockfile: self.callPackage sources.cargo2nix { inherit lockfile; }; })
   ];
 in
 import sources.nixpkgs { inherit overlays; }

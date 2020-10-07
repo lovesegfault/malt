@@ -2,6 +2,7 @@ use discogs::Discogs;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("hello");
     let token = std::env::var("DISCORD_TOKEN").ok();
     let client = Discogs::new("malt", token)?;
 
