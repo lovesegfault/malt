@@ -12,18 +12,33 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+    rust = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
-  outputs = { self, crane, flake-utils, nixpkgs, pre-commit-hooks, ... }:
+  outputs = { self, crane, flake-utils, nixpkgs, pre-commit-hooks, rust }:
     let
       systems = [ "aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux" ];
     in
     flake-utils.lib.eachSystem systems (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust.overlay ];
+        };
         inherit (pkgs) lib;
 
-        craneLib = crane.lib.${system};
+        toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+
+        craneLib = (crane.mkLib pkgs).overrideScope' (final: prev: {
+          rustc = toolchain;
+          cargo = toolchain;
+          rustfmt = toolchain;
+          clippy = toolchain;
+        });
 
         commonArgs = {
           src = ./.;
@@ -52,10 +67,12 @@
           inputsFrom = lib.attrValues self.packages.${system};
           nativeBuildInputs = with pkgs; [
             cargo-edit
+            jq
             nixpkgs-fmt
             rnix-lsp
             rust-analyzer
             statix
+            xh
           ];
         };
 

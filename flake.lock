@@ -99,7 +99,31 @@
         "crane": "crane",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "pre-commit-hooks": "pre-commit-hooks"
+        "pre-commit-hooks": "pre-commit-hooks",
+        "rust": "rust"
+      }
+    },
+    "rust": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1655347556,
+        "narHash": "sha256-JZ06EaeHi9sbbO3n8qYZ8KzDfSbDlPVRHI6Pw4sAxRE=",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "1cc3dc5aec863c2f724a46f7086fb011004a4e6e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "type": "github"
       }
     }
   },
