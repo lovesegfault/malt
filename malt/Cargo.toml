@@ -2,8 +2,6 @@
 name = "malt"
 version = "0.1.0"
 authors = ["Bernardo Meurer <bernardo@meurer.org>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-discogs = { path = "../discogs" }
-tokio = { version = "0.2.22", features = [ "rt-threaded", "tcp", "macros" ] }
