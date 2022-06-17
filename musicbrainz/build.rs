@@ -26,17 +26,6 @@ struct ISO6393 {
     iso6393: String,
 }
 
-fn sanitize_variant(name: &str) -> String {
-    name.chars()
-        .filter_map(|c| match c {
-            '\'' => Some('_'),
-            c if c.is_alphanumeric() => Some(c),
-            _ => None,
-        })
-        .collect::<String>()
-        .to_camel()
-}
-
 fn generate_scripts() -> Result<()> {
     Ok(())
 }
@@ -50,19 +39,18 @@ fn generate_languages<P: AsRef<Path>>(out: P) -> Result<()> {
         .context("parse language list")?
         .iter()
         .map(|l| {
-            let name: syn::Variant = syn::parse_str(&sanitize_variant(&l.name))
-                .context("parse ISO 693-3 language name")?;
-            let msg = format!(
-                r#"
-/// {}
-/// * Type: {}
-/// * Scope: {}
-/// * ISO 693-3: {}"#,
-                l.name, l.ltype, l.scope, l.iso6393
-            );
+            let variant: syn::Variant =
+                syn::parse_str(&l.iso6393.to_camel()).context("parse language code")?;
+            let entonym = format!("# {}", l.name);
+            let ltype = format!("* Type: {}", l.ltype);
+            let scope = format!("* Scope: {}", l.scope);
+            let code = format!("* ISO 639-3: {}", l.iso6393);
             Ok(quote! {
-                #[doc = #msg]
-                #name,
+                #[doc = #entonym]
+                #[doc = #ltype]
+                #[doc = #scope]
+                #[doc = #code]
+                #variant,
             })
         })
         .try_fold::<_, _, Result<_>>(TokenStream::new(), |mut ts, variant: Result<_>| {
