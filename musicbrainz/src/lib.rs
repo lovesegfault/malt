@@ -1,4 +1,5 @@
 pub mod languages;
+pub mod scripts;
 
 #[cfg(test)]
 mod tests {
