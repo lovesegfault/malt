@@ -1,5 +1,10 @@
+use std::{error::Error, sync::Arc};
+
+use anyhow::Context;
 use musicbrainz::{countries::Country, languages::Language, scripts::Script};
+use reqwest::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
+use tower::{Service, ServiceExt};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -21,14 +26,28 @@ struct Release {
 }
 
 impl Release {
-    #[tracing::instrument(skip(client))]
-    pub async fn lookup(client: &reqwest::Client, id: &str) -> anyhow::Result<Self> {
+    #[tracing::instrument(skip(svc))]
+    pub async fn lookup<S>(svc: &mut S, id: &str) -> anyhow::Result<Self>
+    where
+        S: Service<Request, Response = Response>,
+        S::Error: 'static + Send + Sync + Error,
+    {
         let api_url = url::Url::parse("https://musicbrainz.org/ws/2/")?;
         let release_url = api_url.join("release/")?;
         let lookup_url = release_url.join(id)?;
         tracing::debug!(%lookup_url);
 
-        let json = client.get(lookup_url).send().await?.text().await?;
+        let req = Request::new(Method::GET, lookup_url);
+        let json = svc
+            .ready()
+            .await
+            .context("wait for client to be ready")?
+            .call(req)
+            .await
+            .context("GET release")?
+            .text()
+            .await
+            .context("parse release as UTF-8")?;
 
         let jd = &mut serde_json::Deserializer::from_str(&json);
         let release: Release = match serde_path_to_error::deserialize(jd) {
@@ -154,10 +173,17 @@ async fn main() -> anyhow::Result<()> {
         .default_headers(headers)
         .build()?;
 
+    // TODO: Add retry
+    let mut service = tower::ServiceBuilder::new()
+        .buffer(100)
+        .rate_limit(1, std::time::Duration::from_secs(1))
+        .service(client)
+        .map_err(Arc::<dyn Error + Send + Sync>::from);
+
     let reference = tokio::fs::read_to_string("./assets/releases.txt").await?;
 
     for id in reference.lines() {
-        let release = Release::lookup(&client, id).await?;
+        let release = Release::lookup(&mut service, id).await?;
         tracing::info!("Looked up release {}", release.title)
     }
 

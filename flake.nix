@@ -33,7 +33,7 @@
 
         toolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
 
-        craneLib = (crane.mkLib pkgs).overrideScope' (final: prev: {
+        craneLib = (crane.mkLib pkgs).overrideScope' (_: _: {
           rustc = toolchain;
           cargo = toolchain;
           rustfmt = toolchain;
@@ -74,6 +74,9 @@
             statix
             xh
           ];
+          shellHook = ''
+            ${self.checks.${system}.pre-commit-check.shellHook}
+          '';
         };
 
         packages.default = malt;
