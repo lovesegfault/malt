@@ -20,6 +20,30 @@ struct Release {
     text_representation: ReleaseTextRepresentation,
 }
 
+impl Release {
+    #[tracing::instrument(skip(client))]
+    pub async fn lookup(client: &reqwest::Client, id: &str) -> anyhow::Result<Self> {
+        let api_url = url::Url::parse("https://musicbrainz.org/ws/2/")?;
+        let release_url = api_url.join("release/")?;
+        let lookup_url = release_url.join(id)?;
+        tracing::debug!(%lookup_url);
+
+        let json = client.get(lookup_url).send().await?.text().await?;
+
+        let jd = &mut serde_json::Deserializer::from_str(&json);
+        let release: Release = match serde_path_to_error::deserialize(jd) {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::error!(?e);
+                tracing::error!("{}", e.path().to_string());
+                tracing::error!("{}", serde_json::to_string_pretty(&json).unwrap());
+                panic!("Failed to deserialize release"); // FIXME
+            }
+        };
+        Ok(release)
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 struct CoverArtArchive {
     front: bool,
@@ -116,30 +140,26 @@ enum ReleaseQuality {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::INFO)
         .init();
+
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        "Accept",
+        reqwest::header::HeaderValue::from_static("application/json"),
+    );
 
     let client = reqwest::ClientBuilder::new()
         .user_agent("musicbrainz-rs/0.0.0 (https://github.com/lovesegfault/musicbrainz-rs)")
+        .default_headers(headers)
         .build()?;
-    let json = client
-        .get("https://musicbrainz.org/ws/2/release/ffbaf5f8-f9e6-444c-8376-be9b0796b229?fmt=json")
-        .send()
-        .await?
-        .text()
-        .await?;
-    tracing::debug!(json);
 
-    let jd = &mut serde_json::Deserializer::from_str(&json);
-    let release: Release = match serde_path_to_error::deserialize(jd) {
-        Ok(r) => r,
-        Err(e) => {
-            tracing::error!(?e);
-            tracing::error!("{}", e.path().to_string());
-            panic!("Faild to deserialize release");
-        }
-    };
-    tracing::debug!(?release);
+    let reference = tokio::fs::read_to_string("./assets/releases.txt").await?;
+
+    for id in reference.lines() {
+        let release = Release::lookup(&client, id).await?;
+        tracing::info!("Looked up release {}", release.title)
+    }
 
     Ok(())
 }
