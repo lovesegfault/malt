@@ -32,8 +32,8 @@ struct ISO6393 {
 struct ISO3166 {
     country: String,
     alpha2: String,
-    alpha3: String,
-    numeric: String,
+    alpha3: Option<String>,
+    numeric: Option<String>,
 }
 
 fn generate_scripts<P: AsRef<Path>>(out: P) -> Result<()> {
@@ -134,8 +134,8 @@ fn generate_countries<P: AsRef<Path>>(out: P) -> Result<()> {
                 syn::parse_str(&l.alpha2.to_camel()).context("parse country alpha2")?;
             let country = format!("# {}", l.country);
             let alpha2 = format!("* Alpha-2: {}", l.alpha2);
-            let alpha3 = format!("* Alpha-3: {}", l.alpha3);
-            let numeric = format!("* Numeric: {}", l.numeric);
+            let alpha3 = format!("* Alpha-3: {}", l.alpha3.as_ref().unwrap_or(&"None".to_string()));
+            let numeric = format!("* Numeric: {}", l.numeric.as_ref().unwrap_or(&"None".to_string()));
             Ok(quote! {
                 #[doc = #country]
                 #[doc = #alpha2]

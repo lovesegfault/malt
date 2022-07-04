@@ -1492,5 +1492,23 @@
     "alpha2": "ZW",
     "alpha3": "ZWE",
     "numeric": "716"
+  },
+  {
+    "country": "Worldwide",
+    "alpha2": "XW",
+    "alpha3": null,
+    "numeric": null
+  },
+  {
+    "country": "Europe",
+    "alpha2": "XE",
+    "alpha3": null,
+    "numeric": null
+  },
+  {
+    "country": "Kosovo",
+    "alpha2": "XK",
+    "alpha3": null,
+    "numeric": null
   }
 ]
