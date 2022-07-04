@@ -5,18 +5,18 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "kebab-case")]
 struct Release {
     title: String,
-    release_events: Vec<ReleaseEvent>,
+    release_events: Option<Vec<ReleaseEvent>>,
     status: Option<ReleaseStatus>,
     cover_art_archive: CoverArtArchive,
     packaging: Option<ReleasePackaging>,
     asin: Option<String>,
     quality: ReleaseQuality,
-    barcode: String,
-    country: Country,
+    barcode: Option<String>,
+    country: Option<Country>,
     disambiguation: String,
     packaging_id: Option<String>,
     id: String,
-    status_id: String,
+    status_id: Option<String>,
     text_representation: ReleaseTextRepresentation,
 }
 
@@ -55,13 +55,13 @@ struct CoverArtArchive {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct ReleaseTextRepresentation {
-    language: Language,
-    script: Script,
+    language: Option<Language>,
+    script: Option<Script>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 struct ReleaseEvent {
-    area: Area,
+    area: Option<Area>,
     // #[serde(with = "time::serde::iso8601")]
     // date: time::Date,
     date: String,
