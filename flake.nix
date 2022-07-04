@@ -45,9 +45,9 @@
 
           buildInputs = with pkgs; [
             libiconv
-          ];
+          ] ++ lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Security;
 
-          nativeBuildInputs = with pkgs; [ ];
+          nativeBuildInputs = with pkgs; [ pkg-config ];
         };
 
         cargoArtifacts = craneLib.buildDepsOnly (commonArgs // { pname = "malt-deps"; });
