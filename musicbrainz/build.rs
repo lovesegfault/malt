@@ -64,7 +64,7 @@ fn generate_scripts<P: AsRef<Path>>(out: P) -> Result<()> {
         .map(|ts| {
             quote! {
                 /// ISO 15924 Scripts
-                #[derive(serde::Deserialize, serde::Serialize)]
+                #[derive(Debug, serde::Deserialize, serde::Serialize)]
                 pub enum Script {
                     #ts
                 }
@@ -107,7 +107,7 @@ fn generate_languages<P: AsRef<Path>>(out: P) -> Result<()> {
         .map(|ts| {
             quote! {
                 /// ISO 693-3 Languages
-                #[derive(serde::Deserialize, serde::Serialize)]
+                #[derive(Debug, serde::Deserialize, serde::Serialize)]
                 #[serde(rename_all = "lowercase")]
                 pub enum Language {
                     #ts
@@ -151,7 +151,7 @@ fn generate_countries<P: AsRef<Path>>(out: P) -> Result<()> {
         .map(|ts| {
             quote! {
                 /// ISO 3166 Alpha-2 Country Codes
-                #[derive(serde::Deserialize, serde::Serialize)]
+                #[derive(Debug, serde::Deserialize, serde::Serialize)]
                 #[serde(rename_all = "UPPERCASE")]
                 pub enum Country {
                     #ts

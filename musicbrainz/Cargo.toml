@@ -10,6 +10,7 @@ serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 strum = { version = "0.24.1", features = ["derive"] }
 thiserror = "1.0.31"
+time = { version = "0.3.11", features = ["serde-well-known"] }
 tokio = "1.19.2"
 tower = "0.4.12"
 tracing = "0.1.35"
@@ -27,3 +28,7 @@ syn = "1.0.96"
 
 [dev-dependencies]
 anyhow = "1.0.57"
+reqwest = "0.11.11"
+serde_path_to_error = "0.1.7"
+tokio = { version = "1.19.2", features = ["full"] }
+tracing-subscriber = "0.3.14"
