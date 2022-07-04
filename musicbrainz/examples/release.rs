@@ -6,8 +6,7 @@ use musicbrainz::{countries::Country, scripts::Script, languages::Language};
 struct Release {
     release_events: Vec<()>,
     status: Option<ReleaseStatus>,
-    #[serde(skip)]
-    cover_art_archive: (),
+    cover_art_archive: CoverArtArchive,
     packaging: Option<ReleasePackaging>,
     asin: Option<String>,
     quality: ReleaseQuality,
@@ -18,6 +17,15 @@ struct Release {
     id: String,
     status_id: String,
     text_representation: ReleaseTextRepresentation,
+}
+
+#[derive(Deserialize, Serialize)]
+struct CoverArtArchive {
+    front: bool,
+    artwork: bool,
+    count: u64,
+    darkened: bool,
+    back: bool
 }
 
 #[derive(Deserialize, Serialize)]
