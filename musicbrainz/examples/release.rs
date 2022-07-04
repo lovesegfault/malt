@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use musicbrainz::{scripts::Script, languages::Language};
+use musicbrainz::{countries::Country, scripts::Script, languages::Language};
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -19,9 +19,6 @@ struct Release {
     status_id: String,
     text_representation: ReleaseTextRepresentation,
 }
-
-#[derive(Deserialize, Serialize)]
-enum Country {}
 
 #[derive(Deserialize, Serialize)]
 struct ReleaseTextRepresentation {
