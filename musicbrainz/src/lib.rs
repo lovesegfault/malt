@@ -1,5 +1,6 @@
 pub mod countries;
 pub mod languages;
+pub mod mbid;
 pub mod scripts;
 
 #[cfg(test)]
