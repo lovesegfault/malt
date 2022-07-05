@@ -32,17 +32,14 @@ impl Release {
         S: Service<Request, Response = Response>,
         S::Error: 'static + Send + Sync + Error,
     {
-        let api_url = url::Url::parse("https://musicbrainz.org/ws/2/")?;
-        let release_url = api_url.join("release/")?;
-        let lookup_url = release_url.join(id)?;
+        let lookup_url = url::Url::parse("https://musicbrainz.org/ws/2/release/")?.join(id)?;
         tracing::debug!(%lookup_url);
 
-        let req = Request::new(Method::GET, lookup_url);
         let json = svc
             .ready()
             .await
             .context("wait for client to be ready")?
-            .call(req)
+            .call(Request::new(Method::GET, lookup_url))
             .await
             .context("GET release")?
             .text()
