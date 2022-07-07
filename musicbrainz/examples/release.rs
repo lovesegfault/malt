@@ -1,10 +1,10 @@
 use std::{error::Error, sync::Arc};
 
 use anyhow::Context;
-use musicbrainz::{countries::Country, languages::Language, scripts::Script};
+use musicbrainz::{Area, Country, Language, Script};
 use reqwest::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
-use tower::{Service, ServiceExt};
+use tower::{retry::Policy, Service, ServiceExt};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -81,19 +81,6 @@ struct ReleaseEvent {
     // #[serde(with = "time::serde::iso8601")]
     // date: time::Date,
     date: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-struct Area {
-    name: String,
-    id: String,
-    type_id: Option<()>, // FIXME
-    iso_3166_1_codes: Vec<Country>,
-    #[serde(rename = "type")]
-    a_type: Option<()>,
-    disambiguation: String,
-    sort_name: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
