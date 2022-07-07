@@ -140,10 +140,49 @@ enum ReleaseQuality {
     Low,
 }
 
+#[derive(Clone)]
+struct Attempts(usize);
+
+impl Attempts {
+    fn subtract(&self) -> std::future::Ready<Self> {
+        std::future::ready(Self(self.0 - 1))
+    }
+}
+
+impl<E: std::fmt::Debug> Policy<Request, Response, E> for Attempts {
+    type Future = std::future::Ready<Self>;
+
+    fn retry(&self, _: &Request, result: Result<&Response, &E>) -> Option<Self::Future> {
+        match result {
+            Ok(response) => {
+                match response.status().as_u16() {
+                    // retry on timeout or throttle
+                    408 | 429 => Some(self.subtract()),
+                    // don't retry otherwise
+                    _ => None,
+                }
+            }
+            Err(err) => {
+                tracing::warn!(?err);
+                if self.0 > 0 {
+                    tracing::warn!("Retrying, {} attempts remain.", self.0);
+                    Some(std::future::ready(Attempts(self.0 - 1)))
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    fn clone_request(&self, req: &Request) -> Option<Request> {
+        req.try_clone()
+    }
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     let mut headers = reqwest::header::HeaderMap::new();
@@ -157,10 +196,11 @@ async fn main() -> anyhow::Result<()> {
         .default_headers(headers)
         .build()?;
 
-    // TODO: Add retry
     let mut service = tower::ServiceBuilder::new()
         .buffer(100)
         .rate_limit(1, std::time::Duration::from_secs(1))
+        .retry(Attempts(5))
+        .timeout(std::time::Duration::from_secs(10))
         .service(client)
         .map_err(Arc::<dyn Error + Send + Sync>::from);
 
