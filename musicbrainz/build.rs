@@ -3,7 +3,7 @@ use std::path::Path;
 use std::{env::var, fs::File};
 
 use anyhow::{Context, Result};
-use case::CaseExt;
+use heck::ToUpperCamelCase;
 use proc_macro2::TokenStream;
 use quote::quote;
 use serde::Deserialize;
@@ -46,7 +46,7 @@ fn generate_scripts<P: AsRef<Path>>(out: P) -> Result<()> {
         .iter()
         .map(|l| {
             let variant: syn::Variant =
-                syn::parse_str(&l.code.to_camel()).context("parse script code")?;
+                syn::parse_str(&l.code.to_upper_camel_case()).context("parse script code")?;
             let name = format!("# {}", l.name);
             let numeric = format!("* Numeric: {}", l.numeric);
             let date = format!("* Date: {}", l.date);
@@ -87,7 +87,7 @@ fn generate_languages<P: AsRef<Path>>(out: P) -> Result<()> {
         .iter()
         .map(|l| {
             let variant: syn::Variant =
-                syn::parse_str(&l.iso6393.to_camel()).context("parse language code")?;
+                syn::parse_str(&l.iso6393.to_upper_camel_case()).context("parse language code")?;
             let entonym = format!("# {}", l.name);
             let ltype = format!("* Type: {}", l.ltype);
             let scope = format!("* Scope: {}", l.scope);
@@ -131,7 +131,7 @@ fn generate_countries<P: AsRef<Path>>(out: P) -> Result<()> {
         .iter()
         .map(|l| {
             let variant: syn::Variant =
-                syn::parse_str(&l.alpha2.to_camel()).context("parse country alpha2")?;
+                syn::parse_str(&l.alpha2.to_upper_camel_case()).context("parse country alpha2")?;
             let country = format!("# {}", l.country);
             let alpha2 = format!("* Alpha-2: {}", l.alpha2);
             let alpha3 = format!(
