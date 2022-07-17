@@ -2,6 +2,13 @@
 name = "musicbrainz"
 version = "0.1.0"
 edition = "2021"
+authors = [ "Bernardo Meurer <bernardo@meurer.org>" ]
+description = "Musicbrainz API client"
+documentation = "https://docs.rs/musicbrainz"
+repository = "https://github.com/lovesegfault/malt"
+license = "BSD-3-Clause OR Apache-2.0"
+keywords = [ "musicbrainz", "api", "music", "metadata", "rest" ]
+categories = [ "api-bindings", "web-programming::http-client" ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
