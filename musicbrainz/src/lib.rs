@@ -6,6 +6,7 @@ pub mod scripts;
 
 use std::{error::Error, sync::Arc};
 
+use derive_builder::Builder;
 use heck::ToKebabCase;
 use lucene_query_builder::QueryString;
 use reqwest::{Method, Request, Response};
@@ -97,6 +98,15 @@ where
         todo!()
     }
 }
+
+#[derive(Builder, Debug)]
+pub struct Client<S> {
+    svc: S,
+    headers: reqwest::header::HeaderMap,
+    user_agent: String,
+}
+
+impl<S> Client<S> where S: Service<Request> {}
 
 #[cfg(test)]
 mod tests {
