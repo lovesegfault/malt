@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Mbid};
+use crate::{Entity, EntityType, Mbid};
 
 /// Areas are geographic regions or settlements.
 ///
@@ -10,17 +10,17 @@ use crate::{Mbid};
 #[serde(rename_all = "kebab-case")]
 pub struct Area {
     /// The name of the area
-    name: String,
-    sort_name: String,
+    pub name: String,
+    pub sort_name: String,
     /// [MBID](https://musicbrainz.org/doc/MusicBrainz_Identifier)
-    id: Mbid,
+    pub id: Mbid,
     #[serde(rename = "type")]
     /// The type of area, such as country, city, etc.
-    a_type: Option<AreaType>,
-    type_id: Option<Mbid>,
+    pub a_type: Option<AreaType>,
+    pub type_id: Option<Mbid>,
     /// [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) codes for the area
-    iso_3166_1_codes: Vec<String>,
-    disambiguation: String,
+    pub iso_3166_1_codes: Vec<String>,
+    pub disambiguation: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -32,4 +32,12 @@ pub enum AreaType {
     City,
     District,
     Island
+}
+
+impl<S> Entity<S> for Area
+where
+    S: tower::Service<reqwest::Request, Response = reqwest::Response, Error = std::sync::Arc<dyn std::error::Error + Send + Sync>> + Send,
+    S::Future: Send,
+{
+    const TYPE: EntityType = EntityType::Area;
 }

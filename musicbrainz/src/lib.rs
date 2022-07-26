@@ -1,5 +1,6 @@
 pub mod area;
 pub mod mbid;
+pub mod release;
 
 use std::{error::Error, sync::Arc};
 
@@ -9,7 +10,7 @@ use reqwest::{Method, Request, Response};
 use serde::Deserialize;
 use tower::{Service, ServiceExt};
 
-pub use crate::{area::Area, mbid::Mbid};
+pub use crate::{area::Area, mbid::Mbid, release::Release};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
@@ -139,7 +140,7 @@ impl<E: std::fmt::Debug> tower::retry::Policy<Request, Response, E> for MusicBra
 // FIXME: I would like to have a `Client` type instead of this, but I don't know how to wrap a
 // Tower service in another struct.
 pub fn musicbrainz_service() -> Result<
-    impl Service<Request, Response = Response, Error = impl Send + Sync + Error>,
+    impl Service<Request, Response = Response, Error = Arc<dyn Error + Send + Sync>, Future = impl Send>,
     MusicBrainzError,
 > {
     let mut headers = reqwest::header::HeaderMap::new();

@@ -591,18 +591,14 @@ dependencies = [
  "heck",
  "lazy_static",
  "lucene_query_builder",
- "prettyplease",
- "proc-macro2 1.0.40",
  "proptest",
  "proptest-derive",
- "quote 1.0.20",
  "regex",
  "reqwest",
  "serde",
  "serde_json",
  "serde_path_to_error",
  "strum",
- "syn 1.0.98",
  "thiserror",
  "time",
  "tokio",
@@ -782,16 +778,6 @@ name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
-
-[[package]]
-name = "prettyplease"
-version = "0.1.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e1516508b396cefe095485fdce673007422f5e48e82934b7b423dc26aa5e6a4"
-dependencies = [
- "proc-macro2 1.0.40",
- "syn 1.0.98",
-]
 
 [[package]]
 name = "proc-macro2"
