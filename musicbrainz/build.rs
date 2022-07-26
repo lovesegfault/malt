@@ -9,64 +9,12 @@ use quote::quote;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct ISO15924 {
-    code: String,
-    name: String,
-    numeric: String,
-    #[serde(skip)]
-    #[allow(dead_code)]
-    pva: (),
-    date: String,
-}
-
-#[derive(Deserialize)]
 struct ISO6393 {
     name: String,
     #[serde(rename = "type")]
     ltype: String,
     scope: String,
     iso6393: String,
-}
-
-fn generate_scripts<P: AsRef<Path>>(out: P) -> Result<()> {
-    let asset = Path::new("./assets/iso-15924.json");
-    println!("cargo:rerun-if-changed={}", asset.to_string_lossy());
-    let asset = File::open(asset).context("opening script list")?;
-    let reader = BufReader::new(asset);
-    serde_json::from_reader::<_, Vec<ISO15924>>(reader)
-        .context("parse script list")?
-        .iter()
-        .map(|l| {
-            let variant: syn::Variant =
-                syn::parse_str(&l.code.to_upper_camel_case()).context("parse script code")?;
-            let name = format!("# {}", l.name);
-            let numeric = format!("* Numeric: {}", l.numeric);
-            let date = format!("* Date: {}", l.date);
-            Ok(quote! {
-                #[doc = #name]
-                #[doc = #numeric]
-                #[doc = #date]
-                #variant,
-            })
-        })
-        .try_fold::<_, _, Result<_>>(TokenStream::new(), |mut ts, variant: Result<_>| {
-            ts.extend(variant?);
-            anyhow::Result::Ok(ts)
-        })
-        .map(|ts| {
-            quote! {
-                /// ISO 15924 Scripts
-                #[derive(Debug, serde::Deserialize, serde::Serialize, PartialEq, Eq)]
-                pub enum Script {
-                    #ts
-                }
-            }
-        })
-        .and_then(|tks| syn::parse2(tks).context("parse generated scripts source"))
-        .map(|f| prettyplease::unparse(&f))
-        .and_then(|src| std::fs::write(&out, &src).context("write scripts source"))?;
-
-    Ok(())
 }
 
 fn generate_languages<P: AsRef<Path>>(out: P) -> Result<()> {
@@ -116,6 +64,5 @@ fn generate_languages<P: AsRef<Path>>(out: P) -> Result<()> {
 fn main() -> Result<()> {
     let out_root = var("OUT_DIR").context("get OUT_DIR")?;
     generate_languages(format!("{out_root}/languages.rs"))?;
-    generate_scripts(format!("{out_root}/scripts.rs"))?;
     Ok(())
 }

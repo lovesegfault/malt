@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use anyhow::Context;
-use musicbrainz::{musicbrainz_service, Area, Language, Script};
+use musicbrainz::{musicbrainz_service, Area, Language};
 use reqwest::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use tower::{retry::Policy, Service, ServiceExt};
@@ -72,7 +72,7 @@ struct CoverArtArchive {
 #[derive(Debug, Deserialize, Serialize)]
 struct ReleaseTextRepresentation {
     language: Option<Language>,
-    script: Option<Script>,
+    script: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
