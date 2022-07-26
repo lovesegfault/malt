@@ -1,5 +1,4 @@
 pub mod area;
-pub mod languages;
 pub mod mbid;
 
 use std::{error::Error, sync::Arc};
@@ -10,7 +9,7 @@ use reqwest::{Method, Request, Response};
 use serde::Deserialize;
 use tower::{Service, ServiceExt};
 
-pub use crate::{area::Area, languages::Language, mbid::Mbid};
+pub use crate::{area::Area, mbid::Mbid};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
