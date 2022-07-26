@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use anyhow::Context;
-use musicbrainz::{musicbrainz_service, Area, Country, Language, Script};
+use musicbrainz::{musicbrainz_service, Area, Language, Script};
 use reqwest::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use tower::{retry::Policy, Service, ServiceExt};
@@ -17,7 +17,7 @@ struct Release {
     asin: Option<String>,
     quality: ReleaseQuality,
     barcode: Option<String>,
-    country: Option<Country>,
+    country: Option<String>,
     disambiguation: String,
     packaging_id: Option<String>,
     id: String,

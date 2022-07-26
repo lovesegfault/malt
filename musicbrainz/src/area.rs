@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Country, Mbid};
+use crate::{Mbid};
 
 /// Areas are geographic regions or settlements.
 ///
@@ -19,7 +19,7 @@ pub struct Area {
     a_type: Option<AreaType>,
     type_id: Option<Mbid>,
     /// [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) codes for the area
-    iso_3166_1_codes: Vec<Country>,
+    iso_3166_1_codes: Vec<String>,
     disambiguation: String,
 }
 

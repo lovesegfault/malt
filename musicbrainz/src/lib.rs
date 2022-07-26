@@ -1,5 +1,4 @@
 pub mod area;
-pub mod countries;
 pub mod languages;
 pub mod mbid;
 pub mod scripts;
@@ -12,7 +11,7 @@ use reqwest::{Method, Request, Response};
 use serde::Deserialize;
 use tower::{Service, ServiceExt};
 
-pub use crate::{area::Area, countries::Country, languages::Language, mbid::Mbid, scripts::Script};
+pub use crate::{area::Area, languages::Language, mbid::Mbid, scripts::Script};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
