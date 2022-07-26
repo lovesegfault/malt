@@ -1,7 +1,7 @@
-use std::{error::Error, sync::Arc};
+use std::error::Error;
 
 use anyhow::Context;
-use musicbrainz::{Area, Country, Language, Script};
+use musicbrainz::{musicbrainz_service, Area, Country, Language, Script};
 use reqwest::{Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use tower::{retry::Policy, Service, ServiceExt};
@@ -185,24 +185,7 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "Accept",
-        reqwest::header::HeaderValue::from_static("application/json"),
-    );
-
-    let client = reqwest::ClientBuilder::new()
-        .user_agent("musicbrainz-rs/0.0.0 (https://github.com/lovesegfault/musicbrainz-rs)")
-        .default_headers(headers)
-        .build()?;
-
-    let mut service = tower::ServiceBuilder::new()
-        .buffer(100)
-        .rate_limit(1, std::time::Duration::from_secs(1))
-        .retry(Attempts(5))
-        .timeout(std::time::Duration::from_secs(10))
-        .service(client)
-        .map_err(Arc::<dyn Error + Send + Sync>::from);
+    let mut service = musicbrainz_service()?;
 
     let reference = tokio::fs::read_to_string("./assets/releases.txt").await?;
 
