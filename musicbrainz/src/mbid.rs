@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use uuid::Uuid;
 
 /// One of MusicBrainz' aims is to be the universal lingua franca for music by providing a reliable
@@ -22,13 +24,13 @@ pub struct Mbid(Uuid);
 
 impl std::fmt::Debug for Mbid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.hyphenated().fmt(f)
+        std::fmt::Display::fmt(self.0.as_hyphenated(), f)
     }
 }
 
 impl std::fmt::Display for Mbid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.hyphenated().fmt(f)
+        self.0.as_hyphenated().fmt(f)
     }
 }
 
@@ -44,17 +46,24 @@ impl From<Mbid> for Uuid {
     }
 }
 
-impl<'a> TryFrom<&'a str> for Mbid {
-    type Error = <Uuid as TryFrom<&'a str>>::Error;
-    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+impl TryFrom<&str> for Mbid {
+    type Error = uuid::Error;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         Uuid::try_from(value).map(Mbid)
     }
 }
 
-impl<'a> TryFrom<&'a String> for Mbid {
-    type Error = <Mbid as TryFrom<&'a str>>::Error;
-    fn try_from(value: &'a String) -> Result<Self, Self::Error> {
+impl TryFrom<&String> for Mbid {
+    type Error = uuid::Error;
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
         Mbid::try_from(value.as_str())
+    }
+}
+
+impl FromStr for Mbid {
+    type Err = uuid::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::try_from(s)
     }
 }
 
@@ -70,36 +79,43 @@ mod tests {
     use proptest::prelude::*;
     use regex::Regex;
 
+    lazy_static::lazy_static! {
+        static ref MBID_RE: Regex  = Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap();
+    }
+
     proptest! {
         #[test]
-        fn to_and_from_uuid(raw: [u8; 16]) {
-            let uuid = Uuid::from_slice(&raw).unwrap();
+        fn to_and_from_uuid(raw: u128) {
+            let uuid = Uuid::from_u128(raw);
             let mbid = Mbid::from(uuid);
             assert_eq!(mbid.as_uuid(), &uuid)
         }
 
         #[test]
         fn from_string(s in "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}") {
-            let _ = Mbid::try_from(&s).unwrap();
+            let _ = Mbid::try_from(&s);
         }
 
         #[test]
-        fn to_string(raw: [u8; 16]) {
-            lazy_static::lazy_static! {
-                static ref RE: Regex  = Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").unwrap();
-            }
-
-            let mbid = Mbid(Uuid::from_slice(&raw).unwrap());
+        fn to_string(raw: u128) {
+            let mbid = Mbid(Uuid::from_u128(raw));
             let s = mbid.to_string();
-            assert!(RE.is_match(&s))
+            assert!(MBID_RE.is_match(&s))
         }
 
         #[test]
-        fn to_and_from_string(raw: [u8; 16]) {
-            let mbid = Mbid::from(Uuid::from_slice(&raw).unwrap());
+        fn to_and_from_string(raw: u128) {
+            let mbid = Mbid::from(Uuid::from_u128(raw));
             let s = mbid.to_string();
             let new = Mbid::try_from(&s).unwrap();
             assert_eq!(mbid, new);
+        }
+
+        #[test]
+        fn debug_fmt(raw: u128) {
+            let mbid = Mbid(Uuid::from_u128(raw));
+            assert!(MBID_RE.is_match(&format!("{:?}", mbid)));
+            assert!(MBID_RE.is_match(&format!("{:#?}", mbid)));
         }
     }
 }
