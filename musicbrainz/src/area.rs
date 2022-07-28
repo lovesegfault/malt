@@ -34,10 +34,6 @@ pub enum AreaType {
     Island
 }
 
-impl<S> Entity<S> for Area
-where
-    S: tower::Service<reqwest::Request, Response = reqwest::Response, Error = std::sync::Arc<dyn std::error::Error + Send + Sync>> + Send,
-    S::Future: Send,
-{
+impl Entity for Area {
     const NAME: &'static str = "area";
 }

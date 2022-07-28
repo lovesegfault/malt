@@ -7,59 +7,54 @@ use std::{error::Error, sync::Arc};
 use lucene_query_builder::QueryString;
 use reqwest::{Method, Request, Response};
 use serde::Deserialize;
-use tower::{Service, ServiceExt};
+use tower::{util::BoxService, Service, ServiceExt};
 
 pub use crate::{area::Area, mbid::Mbid, release::Release};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
-    #[error("Failed to parse lookup url")]
-    ParseLookupUrl(#[source] url::ParseError),
-    #[error("Failed waiting for lookup service to be ready")]
-    LookupServiceReady(#[source] Arc<dyn Error + Send + Sync>),
-    #[error("Lookup request failed")]
-    LookupRequest(#[source] Arc<dyn Error + Send + Sync>),
-    #[error("Parsing lookup response failed")]
-    LookupParse(#[source] reqwest::Error),
     #[error("Failed to create MusicBrainz client")]
-    CreateClient(#[source] reqwest::Error),
+    ClientCreate(#[source] reqwest::Error),
+    #[error("Failed waiting for lookup service to be ready")]
+    ClientReady(#[source] Arc<dyn Error + Send + Sync>),
+    #[error("Failed to GET from MusicBrainz")]
+    ClientGet(#[source] Arc<dyn Error + Send + Sync>),
+    #[error("Failed to parse lookup url")]
+    LookupParseUrl(#[source] url::ParseError),
+    #[error("Failed to parse lookup response as JSON")]
+    LookupParseResponse(#[source] reqwest::Error),
 }
 
 #[async_trait::async_trait]
-pub trait Entity<S>
+pub trait Entity
 where
     for<'de> Self: Deserialize<'de>,
-    Self: Sized,
-    S: Service<Request, Response = Response, Error = Arc<dyn Error + Send + Sync>> + Send,
-    S::Future: Send,
+    Self: Send + Sized,
 {
     const NAME: &'static str;
 
-    #[tracing::instrument(skip(svc))]
-    async fn lookup(svc: &mut S, mbid: &Mbid) -> Result<Self, MusicBrainzError> {
-        let lookup_url = url::Url::parse(&format!(
+    #[tracing::instrument(skip(client))]
+    async fn lookup(client: &mut Client, mbid: &Mbid) -> Result<Self, MusicBrainzError> {
+        let lookup_url = reqwest::Url::parse(&format!(
             "https://musicbrainz.org/ws/2/{}/{}",
             Self::NAME,
             mbid
         ))
-        .map_err(MusicBrainzError::ParseLookupUrl)?;
+        .map_err(MusicBrainzError::LookupParseUrl)?;
         tracing::debug!(%lookup_url);
 
-        svc.ready()
-            .await
-            .map_err(MusicBrainzError::LookupServiceReady)?
-            .call(Request::new(Method::GET, lookup_url))
-            .await
-            .map_err(MusicBrainzError::LookupRequest)?
+        client
+            .get(lookup_url)
+            .await?
             .json()
             .await
-            .map_err(MusicBrainzError::LookupParse)
+            .map_err(MusicBrainzError::LookupParseResponse)
     }
 
-    #[tracing::instrument(skip(svc))]
+    #[tracing::instrument(skip(client))]
     #[allow(unused)]
     async fn search(
-        svc: &mut S,
+        client: &mut Client,
         query: QueryString,
         limit: usize,
         offset: usize,
@@ -67,10 +62,10 @@ where
         todo!()
     }
 
-    #[tracing::instrument(skip(svc))]
+    #[tracing::instrument(skip(client))]
     #[allow(unused)]
     async fn browse(
-        svc: &mut S,
+        client: &mut Client,
         related: String,
         limit: usize,
         offset: usize,
@@ -118,31 +113,52 @@ impl<E: std::fmt::Debug> tower::retry::Policy<Request, Response, E> for MusicBra
     }
 }
 
-// FIXME: I would like to have a `Client` type instead of this, but I don't know how to wrap a
-// Tower service in another struct.
-pub fn musicbrainz_service() -> Result<
-    impl Service<Request, Response = Response, Error = Arc<dyn Error + Send + Sync>, Future = impl Send>,
-    MusicBrainzError,
-> {
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "Accept",
-        reqwest::header::HeaderValue::from_static("application/json"),
-    );
+pub struct Client {
+    svc: BoxService<Request, Response, Arc<dyn Error + Send + Sync>>,
+}
 
-    let client = reqwest::ClientBuilder::new()
-        .user_agent("musicbrainz-rs/0.0.0 (https://github.com/lovesegfault/musicbrainz-rs)")
-        .default_headers(headers)
-        .build()
-        .map_err(MusicBrainzError::CreateClient)?;
+impl Client {
+    pub fn new() -> Result<Self, MusicBrainzError> {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            "Accept",
+            reqwest::header::HeaderValue::from_static("application/json"),
+        );
+        let client = reqwest::ClientBuilder::new()
+            .user_agent("musicbrainz-rs/0.0.0 (https://github.com/lovesegfault/musicbrainz-rs)")
+            .default_headers(headers)
+            .build()
+            .map_err(MusicBrainzError::ClientCreate)?;
+        Ok(Self::from(client))
+    }
 
-    Ok(tower::ServiceBuilder::new()
-        .buffer(100)
-        .rate_limit(1, std::time::Duration::from_secs(1))
-        .retry(MusicBrainzRetry(5))
-        .timeout(std::time::Duration::from_secs(10))
-        .service(client)
-        .map_err(Arc::<dyn Error + Send + Sync>::from))
+    async fn get(&mut self, url: reqwest::Url) -> Result<Response, MusicBrainzError> {
+        self.svc
+            .ready()
+            .await
+            .map_err(MusicBrainzError::ClientReady)?
+            .call(Request::new(Method::GET, url))
+            .await
+            .map_err(MusicBrainzError::ClientGet)
+    }
+
+    pub async fn lookup<E: Entity>(&mut self, mbid: &Mbid) -> Result<E, MusicBrainzError> {
+        E::lookup(self, mbid).await
+    }
+}
+
+impl From<reqwest::Client> for Client {
+    fn from(client: reqwest::Client) -> Self {
+        let svc = tower::ServiceBuilder::new()
+            .buffer(100)
+            .rate_limit(1, std::time::Duration::from_secs(1))
+            .retry(MusicBrainzRetry(5))
+            .timeout(std::time::Duration::from_secs(10))
+            .service(client)
+            .map_err(Arc::<dyn Error + Send + Sync>::from)
+            .boxed();
+        Self { svc }
+    }
 }
 
 #[cfg(test)]

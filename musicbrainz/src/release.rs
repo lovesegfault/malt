@@ -100,10 +100,6 @@ pub enum ReleaseQuality {
     Low,
 }
 
-impl<S> Entity<S> for Release
-where
-    S: tower::Service<reqwest::Request, Response = reqwest::Response, Error = std::sync::Arc<dyn std::error::Error + Send + Sync>> + Send,
-    S::Future: Send,
-{
+impl Entity for Release{
     const NAME: &'static str = "release";
 }

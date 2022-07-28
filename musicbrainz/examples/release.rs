@@ -1,5 +1,5 @@
 use anyhow::Context;
-use musicbrainz::{musicbrainz_service, Entity, Mbid, Release};
+use musicbrainz::{Client, Entity, Mbid, Release};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -7,13 +7,15 @@ async fn main() -> anyhow::Result<()> {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let mut service = musicbrainz_service()?;
+    let mut client = Client::new()?;
 
     let reference = tokio::fs::read_to_string("./assets/releases.txt").await?;
 
     for id in reference.lines() {
         let id = Mbid::try_from(id).context("Parse MBID from release list")?;
-        let release = Release::lookup(&mut service, &id).await?;
+        let release = Release::lookup(&mut client, &id).await?;
+        // alternatively
+        // let b: Release = client.lookup(&id).await?;
         tracing::info!("Looked up release {}", release.title)
     }
 
