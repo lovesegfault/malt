@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use crate::{Area, Mbid, Entity, EntityType};
+use crate::{Area, Mbid, Entity};
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -105,5 +105,5 @@ where
     S: tower::Service<reqwest::Request, Response = reqwest::Response, Error = std::sync::Arc<dyn std::error::Error + Send + Sync>> + Send,
     S::Future: Send,
 {
-    const TYPE: EntityType = EntityType::Release;
+    const NAME: &'static str = "release";
 }

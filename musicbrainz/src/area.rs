@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Entity, EntityType, Mbid};
+use crate::{Entity, Mbid};
 
 /// Areas are geographic regions or settlements.
 ///
@@ -39,5 +39,5 @@ where
     S: tower::Service<reqwest::Request, Response = reqwest::Response, Error = std::sync::Arc<dyn std::error::Error + Send + Sync>> + Send,
     S::Future: Send,
 {
-    const TYPE: EntityType = EntityType::Area;
+    const NAME: &'static str = "area";
 }

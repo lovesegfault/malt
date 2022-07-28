@@ -4,7 +4,6 @@ pub mod release;
 
 use std::{error::Error, sync::Arc};
 
-use heck::ToKebabCase;
 use lucene_query_builder::QueryString;
 use reqwest::{Method, Request, Response};
 use serde::Deserialize;
@@ -26,24 +25,6 @@ pub enum MusicBrainzError {
     CreateClient(#[source] reqwest::Error),
 }
 
-#[derive(Debug, strum::Display, PartialEq, Eq)]
-pub enum EntityType {
-    Area,
-    Artist,
-    Event,
-    Genre,
-    Instrument,
-    Label,
-    Place,
-    Recording,
-    Release,
-    #[strum(serialize = "Release Group")]
-    ReleaseGroup,
-    Series,
-    Url,
-    Work,
-}
-
 #[async_trait::async_trait]
 pub trait Entity<S>
 where
@@ -52,13 +33,13 @@ where
     S: Service<Request, Response = Response, Error = Arc<dyn Error + Send + Sync>> + Send,
     S::Future: Send,
 {
-    const TYPE: EntityType;
+    const NAME: &'static str;
 
     #[tracing::instrument(skip(svc))]
     async fn lookup(svc: &mut S, mbid: &Mbid) -> Result<Self, MusicBrainzError> {
         let lookup_url = url::Url::parse(&format!(
             "https://musicbrainz.org/ws/2/{}/{}",
-            Self::TYPE.to_string().to_kebab_case(),
+            Self::NAME,
             mbid
         ))
         .map_err(MusicBrainzError::ParseLookupUrl)?;
@@ -90,7 +71,7 @@ where
     #[allow(unused)]
     async fn browse(
         svc: &mut S,
-        related: EntityType,
+        related: String,
         limit: usize,
         offset: usize,
     ) -> Result<Self, MusicBrainzError> {
