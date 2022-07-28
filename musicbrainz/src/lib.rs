@@ -29,7 +29,7 @@ pub enum MusicBrainzError {
 pub trait Entity
 where
     for<'de> Self: Deserialize<'de>,
-    Self: Send + Sized,
+    Self: Send ,
 {
     const NAME: &'static str;
 
