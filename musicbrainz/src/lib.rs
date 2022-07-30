@@ -1,6 +1,7 @@
 pub mod area;
 pub mod mbid;
 pub mod release;
+pub mod release_group;
 
 use std::{error::Error, sync::Arc};
 
@@ -9,7 +10,7 @@ use reqwest::{Method, Request, Response};
 use serde::Deserialize;
 use tower::{util::BoxService, Service, ServiceExt};
 
-pub use crate::{area::Area, mbid::Mbid, release::Release};
+pub use crate::{area::Area, mbid::Mbid, release::Release, release_group::ReleaseGroup};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
@@ -22,7 +23,7 @@ pub enum MusicBrainzError {
     #[error("Failed to parse lookup url")]
     LookupParseUrl(#[source] url::ParseError),
     #[error("Failed to parse lookup response as JSON")]
-    LookupParseResponse(#[source] reqwest::Error),
+    LookupParseResponse(#[source] serde_json::Error),
 }
 
 #[async_trait::async_trait]
@@ -43,12 +44,13 @@ where
         .map_err(MusicBrainzError::LookupParseUrl)?;
         tracing::debug!(%lookup_url);
 
-        client
-            .get(lookup_url)
-            .await?
-            .json()
-            .await
-            .map_err(MusicBrainzError::LookupParseResponse)
+        let res = client.get(lookup_url).await?;
+        tracing::debug!(?res);
+
+        let text = res.text().await.unwrap(); // FIXME
+        tracing::trace!(text);
+
+        serde_json::from_str(&text).map_err(MusicBrainzError::LookupParseResponse)
     }
 
     #[tracing::instrument(skip(client))]
