@@ -150,6 +150,8 @@ pub enum ReleaseGroupSecondaryType {
     Spokenword,
 }
 
+impl crate::private::Sealed for ReleaseGroup {}
+
 impl Entity for ReleaseGroup {
     const NAME: &'static str = "release-group";
 }

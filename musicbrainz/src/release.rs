@@ -100,6 +100,8 @@ pub enum ReleaseQuality {
     Low,
 }
 
+impl crate::private::Sealed for Release {}
+
 impl Entity for Release{
     const NAME: &'static str = "release";
 }

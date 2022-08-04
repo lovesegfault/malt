@@ -19,6 +19,7 @@ pub struct Area {
     pub a_type: Option<AreaType>,
     pub type_id: Option<Mbid>,
     /// [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) codes for the area
+    #[serde(default)]
     pub iso_3166_1_codes: Vec<String>,
     pub disambiguation: String,
 }
@@ -33,6 +34,8 @@ pub enum AreaType {
     District,
     Island
 }
+
+impl crate::private::Sealed for Area {}
 
 impl Entity for Area {
     const NAME: &'static str = "area";

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use clap::{Parser, ValueEnum};
 use erased_serde::{serialize_trait_object, Serialize};
-use musicbrainz::{Area, Client, Entity, Mbid, Release};
+use musicbrainz::{Area, Client, Entity, Mbid, Release, ReleaseGroup, Artist};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
 trait ErasedEntity: Serialize + Debug {}
@@ -37,7 +37,9 @@ impl EntityType {
     ) -> anyhow::Result<Box<dyn ErasedEntity>> {
         match self {
             EntityType::Area => Ok(Box::new(Area::lookup(client, mbid).await?)),
+            EntityType::Artist => Ok(Box::new(Artist::lookup(client, mbid).await?)),
             EntityType::Release => Ok(Box::new(Release::lookup(client, mbid).await?)),
+            EntityType::ReleaseGroup => Ok(Box::new(ReleaseGroup::lookup(client, mbid).await?)),
             _ => anyhow::bail!("Unimplemented entity {}", self),
         }
     }
@@ -56,7 +58,7 @@ struct Args {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::TRACE)
         .init();
 
     let args = Args::parse();

@@ -1,4 +1,5 @@
 pub mod area;
+pub mod artist;
 pub mod mbid;
 pub mod release;
 pub mod release_group;
@@ -10,7 +11,9 @@ use reqwest::{Method, Request, Response};
 use serde::Deserialize;
 use tower::{util::BoxService, Service, ServiceExt};
 
-pub use crate::{area::Area, mbid::Mbid, release::Release, release_group::ReleaseGroup};
+pub use crate::{
+    area::Area, artist::Artist, mbid::Mbid, release::Release, release_group::ReleaseGroup,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum MusicBrainzError {
@@ -22,15 +25,29 @@ pub enum MusicBrainzError {
     ClientGet(#[source] Arc<dyn Error + Send + Sync>),
     #[error("Failed to parse lookup url")]
     LookupParseUrl(#[source] url::ParseError),
-    #[error("Failed to parse lookup response as JSON")]
-    LookupParseResponse(#[source] serde_json::Error),
+    #[error("Failed to parse lookup response as utf8")]
+    LookupResponseText(#[source] reqwest::Error),
+    #[error("Failed to parse lookup response as XML")]
+    LookupResponseXml(#[source] quick_xml::de::DeError),
+}
+
+#[derive(Deserialize)]
+#[serde(rename = "metadata")]
+struct Metadata<E> {
+    #[serde(
+        alias = "area",
+        alias = "artist",
+        alias = "release",
+        alias = "release-group"
+    )]
+    inner: E,
 }
 
 #[async_trait::async_trait]
-pub trait Entity
+pub trait Entity: private::Sealed
 where
     for<'de> Self: Deserialize<'de>,
-    Self: Send ,
+    Self: Send,
 {
     const NAME: &'static str;
 
@@ -47,10 +64,16 @@ where
         let res = client.get(lookup_url).await?;
         tracing::debug!(?res);
 
-        let text = res.text().await.unwrap(); // FIXME
+        let text = res
+            .text()
+            .await
+            .map_err(MusicBrainzError::LookupResponseText)?;
         tracing::trace!(text);
 
-        serde_json::from_str(&text).map_err(MusicBrainzError::LookupParseResponse)
+        let md: Metadata<Self> =
+            quick_xml::de::from_str(&text).map_err(MusicBrainzError::LookupResponseXml)?;
+
+        Ok(md.inner)
     }
 
     #[tracing::instrument(skip(client))]
@@ -124,7 +147,7 @@ impl Client {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Accept",
-            reqwest::header::HeaderValue::from_static("application/json"),
+            reqwest::header::HeaderValue::from_static("application/xml"),
         );
         let client = reqwest::ClientBuilder::new()
             .user_agent("musicbrainz-rs/0.0.0 (https://github.com/lovesegfault/musicbrainz-rs)")
@@ -161,6 +184,10 @@ impl From<reqwest::Client> for Client {
             .boxed();
         Self { svc }
     }
+}
+
+mod private {
+    pub trait Sealed: Sized {}
 }
 
 #[cfg(test)]

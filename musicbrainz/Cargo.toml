@@ -10,13 +10,16 @@ license = "BSD-3-Clause OR Apache-2.0"
 keywords = [ "musicbrainz", "api", "music", "metadata", "rest" ]
 categories = [ "api-bindings", "web-programming::http-client" ]
 
+[features]
+strict = []
+
 [dependencies]
 async-trait = "0.1.56"
 derive_builder = "0.11.2"
 lucene_query_builder = "0.3.0"
+quick-xml = { version = "0.23.0", features = ["serialize"] }
 reqwest = { version = "0.11.11", features = ["gzip", "json", "stream"] }
 serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
 strum = { version = "0.24.1", features = ["derive"] }
 thiserror = "1.0.31"
 time = { version = "0.3.11", features = ["serde-well-known"] }
@@ -35,6 +38,7 @@ lazy_static = "1.4.0"
 proptest = "1.0.0"
 proptest-derive = "0.3.0"
 regex = "1.6.0"
+serde_json = "1.0.82"
 serde_path_to_error = "0.1.7"
 tokio = { version = "1.19.2", features = ["full"] }
 tracing-subscriber = "0.3.14"
